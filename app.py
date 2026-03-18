@@ -1,6 +1,8 @@
 import streamlit as st
 import numpy as np
 import pickle
+import pandas as pd
+import matplotlib.pyplot as plt
 
 # -------------------------
 # Load Model & Scaler
@@ -8,13 +10,17 @@ import pickle
 model = pickle.load(open("best_model.pkl", "rb"))
 scaler = pickle.load(open("scaler.pkl", "rb"))
 
+# Feature names
+features = ["age","sex","cp","trestbps","chol","fbs",
+            "restecg","thalach","exang","oldpeak","slope","ca","thal"]
+
 # -------------------------
 # Page Config
 # -------------------------
 st.set_page_config(page_title="GP Assistant", layout="centered")
 
 # -------------------------
-# Header (Improved UI)
+# Header
 # -------------------------
 st.markdown(
 """
@@ -50,7 +56,7 @@ with col2:
     thal = st.selectbox("Thal", [1,2,3])
 
 # -------------------------
-# Prediction Logic
+# Prediction
 # -------------------------
 if st.button("🔍 Predict Risk"):
 
@@ -63,7 +69,7 @@ if st.button("🔍 Predict Risk"):
     prob = model.predict_proba(input_scaled)[0][1]
 
     # -------------------------
-    # Result Section (Improved)
+    # Result
     # -------------------------
     st.markdown("### 🩺 Prediction Result")
 
@@ -75,32 +81,50 @@ if st.button("🔍 Predict Risk"):
         st.success(f"🟢 LOW RISK ({prob*100:.2f}%)")
 
     # -------------------------
-    # Explanation Section
+    # Explanation
     # -------------------------
     st.markdown("### 🧠 Explanation")
 
     if prob > 0.7:
-        st.write("High risk detected due to abnormal heart indicators. Immediate medical consultation is recommended.")
+        st.write("High risk detected due to abnormal heart indicators.")
     elif prob > 0.4:
-        st.write("Moderate risk. Regular monitoring and lifestyle improvements are advised.")
+        st.write("Moderate risk. Monitor your health.")
     else:
-        st.write("Low risk. Maintain a healthy lifestyle and regular checkups.")
+        st.write("Low risk. Maintain healthy lifestyle.")
 
     # -------------------------
-    # Important Features Info
+    # Feature Importance Graph
     # -------------------------
-    st.markdown("### 📊 Key Risk Factors")
+    st.markdown("### 📊 Feature Importance")
 
-    st.write("""
-    - Chest Pain Type  
-    - Cholesterol Level  
-    - Blood Pressure  
-    - Maximum Heart Rate  
-    - Exercise-induced Angina  
-    """)
+    try:
+        importance = model.feature_importances_
+        importance_df = pd.DataFrame({
+            "Feature": features,
+            "Importance": importance
+        }).sort_values(by="Importance", ascending=True)
+
+        fig, ax = plt.subplots()
+        ax.barh(importance_df["Feature"], importance_df["Importance"])
+        ax.set_title("Feature Importance")
+
+        st.pyplot(fig)
+
+    except:
+        st.warning("Feature importance not available for this model.")
+
+    # -------------------------
+    # Patient Input Visualization
+    # -------------------------
+    st.markdown("### 📈 Patient Data Overview")
+
+    input_df = pd.DataFrame(input_data, columns=features).T
+    input_df.columns = ["Value"]
+
+    st.bar_chart(input_df)
 
 # -------------------------
-# Footer / Disclaimer
+# Footer
 # -------------------------
 st.markdown("---")
-st.warning("⚠ This tool is for educational purposes only. Always consult a qualified doctor.")
+st.warning("⚠ This tool is for educational purposes only. Consult a doctor.")
