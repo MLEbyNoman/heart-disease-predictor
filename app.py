@@ -1,4 +1,3 @@
-
 import streamlit as st
 import numpy as np
 import pickle
@@ -14,13 +13,22 @@ scaler = pickle.load(open("scaler.pkl", "rb"))
 # -------------------------
 st.set_page_config(page_title="GP Assistant", layout="centered")
 
-st.title("🏥 Smart GP Assistant")
-st.subheader("Heart Disease Risk Prediction")
+# -------------------------
+# Header (Improved UI)
+# -------------------------
+st.markdown(
+"""
+<h1 style='text-align: center; color: #2E86C1;'>🏥 Smart GP Assistant</h1>
+<h3 style='text-align: center;'>Heart Disease Risk Prediction System</h3>
+<hr>
+""",
+unsafe_allow_html=True
+)
 
 # -------------------------
 # Input Section
 # -------------------------
-st.markdown("### Enter Patient Details")
+st.markdown("### 📝 Enter Patient Details")
 
 col1, col2 = st.columns(2)
 
@@ -54,23 +62,45 @@ if st.button("🔍 Predict Risk"):
 
     prob = model.predict_proba(input_scaled)[0][1]
 
-    # Risk Levels
+    # -------------------------
+    # Result Section (Improved)
+    # -------------------------
+    st.markdown("### 🩺 Prediction Result")
+
     if prob > 0.7:
-        risk = "🔴 HIGH"
-        color = "red"
+        st.error(f"🔴 HIGH RISK ({prob*100:.2f}%)")
     elif prob > 0.4:
-        risk = "🟡 MEDIUM"
-        color = "orange"
+        st.warning(f"🟡 MEDIUM RISK ({prob*100:.2f}%)")
     else:
-        risk = "🟢 LOW"
-        color = "green"
+        st.success(f"🟢 LOW RISK ({prob*100:.2f}%)")
 
-    st.markdown("### Result")
+    # -------------------------
+    # Explanation Section
+    # -------------------------
+    st.markdown("### 🧠 Explanation")
 
-    st.markdown(f"<h2 style='color:{color};'>Risk Level: {risk}</h2>", unsafe_allow_html=True)
-    st.write(f"Confidence: {prob*100:.2f}%")
+    if prob > 0.7:
+        st.write("High risk detected due to abnormal heart indicators. Immediate medical consultation is recommended.")
+    elif prob > 0.4:
+        st.write("Moderate risk. Regular monitoring and lifestyle improvements are advised.")
+    else:
+        st.write("Low risk. Maintain a healthy lifestyle and regular checkups.")
+
+    # -------------------------
+    # Important Features Info
+    # -------------------------
+    st.markdown("### 📊 Key Risk Factors")
+
+    st.write("""
+    - Chest Pain Type  
+    - Cholesterol Level  
+    - Blood Pressure  
+    - Maximum Heart Rate  
+    - Exercise-induced Angina  
+    """)
 
 # -------------------------
-# Disclaimer
+# Footer / Disclaimer
 # -------------------------
-st.warning("⚠ This is not a medical diagnosis. Consult a doctor.")
+st.markdown("---")
+st.warning("⚠ This tool is for educational purposes only. Always consult a qualified doctor.")
